@@ -1,28 +1,20 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
+[System.Serializable]
 public class Octree
 {
     public OctreeNode rootNode;
-    public Bounds boundsD;
-
-    public Octree(GameObject[] worldObjects, float minNodeSize)
+    public Octree(List<ObjectController> worldObjects, float minNodeSize, Bounds worldBound)
     {
-        Bounds bounds = new Bounds();
-        bounds.Expand(20);
-        boundsD = bounds;
-        rootNode = new OctreeNode(bounds, minNodeSize);
-        AddObjects(worldObjects);
-    }
-
-    public void AddObjects(GameObject[] worldObjects)
-    {
-        foreach(GameObject go in worldObjects)
+        rootNode = new OctreeNode(worldBound, minNodeSize);
+        foreach(ObjectController obj in worldObjects)
         {
-            rootNode.AddObject(go);
+            rootNode.Subdivide(obj);
         }
+
+        rootNode.CheckCollisions();
+
     }
+
 }

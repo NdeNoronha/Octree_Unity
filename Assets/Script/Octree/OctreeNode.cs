@@ -1,89 +1,110 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct OctreeObject
-{
-    public Bounds bounds;
-    public GameObject gameObject;
-
-    public OctreeObject(GameObject go)
-    {
-        bounds = go.GetComponent<Collider>().bounds;
-        gameObject = go;
-    }
-}
+[System.Serializable]
 public class OctreeNode 
 {
     Bounds nodeBounds;
-    Bounds[] childBounds;
-    public OctreeNode[] children = null;
+    public OctreeNode[] octreeNodeChild;
     float minSize;
-    List<OctreeObject> containedObject = new List<OctreeObject>();
-
-    public OctreeNode(Bounds b, float minNodeSize)
+    public List<ObjectController> objectControllers;
+    public OctreeNode(Bounds nodeBounds, float minNodeSize)
     {
-        nodeBounds = b;
+        objectControllers =   new List<ObjectController>();   
+        this.nodeBounds = nodeBounds;
         minSize = minNodeSize;
 
-        float quarter = nodeBounds.size.y / 4f;
-        float childLenght = nodeBounds.size.y / 2f;
-        Vector3 childSize = new Vector3(childLenght, childLenght, childLenght);
-        childBounds = new Bounds[8];
-        childBounds[0] = new Bounds(nodeBounds.center + new Vector3(-quarter, quarter, -quarter), childSize);
-        childBounds[1] = new Bounds(nodeBounds.center + new Vector3(-quarter, quarter, quarter), childSize);
-        childBounds[2] = new Bounds(nodeBounds.center + new Vector3(quarter, quarter, -quarter), childSize);
-        childBounds[3] = new Bounds(nodeBounds.center + new Vector3(quarter, quarter, quarter), childSize);
-        childBounds[4] = new Bounds(nodeBounds.center + new Vector3(-quarter, -quarter, -quarter), childSize);
-        childBounds[5] = new Bounds(nodeBounds.center + new Vector3(-quarter, -quarter, quarter), childSize);
-        childBounds[6] = new Bounds(nodeBounds.center + new Vector3(quarter, -quarter, -quarter), childSize);
-        childBounds[7] = new Bounds(nodeBounds.center + new Vector3(quarter, -quarter, quarter), childSize);
     }
 
-    public void AddObject(GameObject go)
+    public void Subdivide(ObjectController go)
     {
-        DivideAndAdd(go);
-    }
-
-    public void DivideAndAdd(GameObject go)
-    {
-        OctreeObject octObj = new OctreeObject(go);
+        //verify  stop condition is done : the nodeBounds size is less then minSize definition
         if (nodeBounds.size.y <= minSize)
         {
-            containedObject.Add(new OctreeObject(go));
+            objectControllers.Add(go);
+            octreeNodeChild = null;
             return;
         }
-        if(children == null)
-            children = new OctreeNode[8];
-        bool dividing = false;
-        for(int i = 0; i < 8; i++)
+
+        if (octreeNodeChild == null) octreeNodeChild = new OctreeNode[8];
+        bool dividingOctreeNode = false;
+
+        for (int i = 0; i < 8; i++)
         {
-            if (children[i] == null)
-                children[i] = new OctreeNode(childBounds[i], minSize);
-            if (childBounds[i].Intersects(octObj.bounds))
+            if (octreeNodeChild[i] == null)
+                octreeNodeChild[i] = new OctreeNode(OctantBound(i), minSize);
+
+            if (octreeNodeChild[i].nodeBounds.Intersects(go.bound))
             {
-                dividing = true;
-                children[i].DivideAndAdd(go);
+                dividingOctreeNode = true;
+                //sending ObjectController "go" to child when it is inside childBounds[i]
+                    
+                octreeNodeChild[i].Subdivide(go);
             }
         }
-        if(dividing == false)
+        if (dividingOctreeNode == false)
         {
-            containedObject.Add(octObj);
-            children = null;
+            //whenn not inside childs
+            objectControllers.Add(go);
+            octreeNodeChild = null;
+        }
+        
+        
+        
+    }
+
+    //check all objects collisions at latest octrees subdivision or check octreeNodes collisions
+    public void CheckCollisions() {
+
+        if(octreeNodeChild == null)
+        {
+            CollisionManager.ProcessCollision(objectControllers, objectControllers);
+        } else
+        {
+            foreach(OctreeNode node in octreeNodeChild)
+            {
+                node.CheckCollisions();
+            }
+        }
+
+            
+        
+
+    }
+
+    //Render octree BoundingBoxes
+    public void DrawBoundingBox()
+    {
+        Gizmos.color = new Color(0, 1, 0);
+        if(octreeNodeChild != null)
+        {
+            foreach (OctreeNode node in octreeNodeChild)
+            {
+                node.DrawBoundingBox();
+
+            }
+
         }
     }
 
-    public void Draw()
+    private Bounds OctantBound(int index)
     {
-        Gizmos.color = new Color(0, 1, 0);
-        Gizmos.DrawWireCube(nodeBounds.center, nodeBounds.size); 
-        if(children != null)
-        {
-            for(int i = 0; i < 8; i++)
-            {
-                if (children[i] != null)
-                    children[i].Draw();
-            }
-        }
+        float quarter = nodeBounds.size.y / 4f;
+        Vector3 childSize = Vector3.one * nodeBounds.size.y / 2f;
+
+        if (index == 0) return new Bounds(nodeBounds.center + new Vector3(-quarter, quarter, -quarter), childSize);
+        if (index == 1) return new Bounds(nodeBounds.center + new Vector3(-quarter, quarter, quarter), childSize);
+        if (index == 2) return new Bounds(nodeBounds.center + new Vector3(quarter, quarter, -quarter), childSize);
+        if (index == 3) return new Bounds(nodeBounds.center + new Vector3(quarter, quarter, quarter), childSize);
+        if (index == 4) return new Bounds(nodeBounds.center + new Vector3(-quarter, -quarter, -quarter), childSize);
+        if (index == 5) return new Bounds(nodeBounds.center + new Vector3(-quarter, -quarter, quarter), childSize);
+        if (index == 6) return new Bounds(nodeBounds.center + new Vector3(quarter, -quarter, -quarter), childSize);
+        return new Bounds(nodeBounds.center + new Vector3(quarter, -quarter, quarter), childSize);
+
     }
+
+
 }
+
+
+
