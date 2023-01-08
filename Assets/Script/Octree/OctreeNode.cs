@@ -16,12 +16,13 @@ public class OctreeNode
 
     }
 
-    public void Subdivide(ObjectController go)
+
+    public void Subdivide(ObjectController objController)
     {
         //verify  stop condition is done : the nodeBounds size is less then minSize definition
         if (nodeBounds.size.y <= minSize)
         {
-            objectControllers.Add(go);
+            objectControllers.Add(objController);
             octreeNodeChild = null;
             return;
         }
@@ -29,26 +30,27 @@ public class OctreeNode
         if (octreeNodeChild == null) octreeNodeChild = new OctreeNode[8];
         bool dividingOctreeNode = false;
 
+        //subdivide node in 8 nodes
         for (int i = 0; i < 8; i++)
         {
             if (octreeNodeChild[i] == null)
                 octreeNodeChild[i] = new OctreeNode(OctantBound(i), minSize);
 
-            if (octreeNodeChild[i].nodeBounds.Intersects(go.bound))
+            //when current Object bounds intersect the current octreeNode Bounds
+            if (octreeNodeChild[i].nodeBounds.Intersects(objController.bound))
             {
                 dividingOctreeNode = true;
-                //sending ObjectController "go" to child when it is inside childBounds[i] 
-                octreeNodeChild[i].Subdivide(go);
+                //sending  current  objController to child when it inside childBounds[i] 
+                octreeNodeChild[i].Subdivide(objController);
             }
         }
         if (dividingOctreeNode == false)
         {
             //whenn not inside childs
-            objectControllers.Add(go);
+            objectControllers.Add(objController);
             octreeNodeChild = null;
         }
-        
-        
+  
         
     }
 
@@ -87,6 +89,7 @@ public class OctreeNode
         }
     }
 
+    //octant generate for each index (0 to 7)
     private Bounds OctantBound(int index)
     {
         float quarter = nodeBounds.size.y / 4f;

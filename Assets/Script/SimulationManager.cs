@@ -25,6 +25,8 @@ public class SimulationManager : MonoBehaviour
 
     public static SimulationManager instance;
 
+    public List<double> timeSteps = new List<double>();
+
     public float WorldSize => worldSize;
 
     private void Start()
@@ -48,6 +50,7 @@ public class SimulationManager : MonoBehaviour
     {
 
         worldBounds.extents = Vector3.one*worldSize;
+       //force brute simulation
         if(simulationMode == SimulationMode.BRUTE_FORCE)
         {
             Stopwatch stopwatch = new Stopwatch();
@@ -55,16 +58,19 @@ public class SimulationManager : MonoBehaviour
             stopwatch.Start();
             CollisionManager.ProcessCollision(worldObjects, worldObjects);
             stopwatch.Stop();
-            UnityEngine.Debug.Log(stopwatch.Elapsed.TotalMilliseconds.ToString());
+            //UnityEngine.Debug.Log("Brute_Force millis:"+stopwatch.Elapsed.TotalMilliseconds.ToString());
+            if (Time.fixedTime > 5) StorageOrShowMedia(stopwatch.Elapsed.TotalMilliseconds);
         }
-        //octree update each 
+        //octree update each fixedTime
         else if (simulationMode == SimulationMode.OCTREE)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             octree = new Octree(worldObjects, nodeMinSize, worldBounds);
             stopwatch.Stop();
-            UnityEngine.Debug.Log(stopwatch.Elapsed.TotalMilliseconds.ToString());
+            //UnityEngine.Debug.Log("Octree millis:"+stopwatch.Elapsed.TotalMilliseconds.ToString());
+            if (Time.fixedTime > 5) StorageOrShowMedia(stopwatch.Elapsed.TotalMilliseconds);
+
 
         }
 
@@ -74,11 +80,29 @@ public class SimulationManager : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = new Color(0, 1, 0);
-        Gizmos.DrawWireCube(worldBounds.center, worldBounds.center);
+        Gizmos.DrawWireCube(worldBounds.center, worldBounds.size);
         octree.rootNode.DrawBoundingBox();
         
 
     }
 
+    private void StorageOrShowMedia(double timeMillis)
+    {
+        if(timeSteps.Count < 100) 
+            timeSteps.Add(timeMillis); 
+        else if (timeSteps.Count == 100)
+            //show media at 100 times
+            UnityEngine.Debug.Log("média: " + Media(timeSteps).ToString());
 
+    }
+
+    private double Media(List<double> timeMillis)
+    {
+        double count = 0f;
+        for (int i = 0; i < 100; i++)
+        {
+            count+= timeMillis[i];
+        }
+        return count / (double)100.00000000f;
+    }
 }

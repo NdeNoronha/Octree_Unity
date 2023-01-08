@@ -20,10 +20,7 @@ public class ObjectController : MonoBehaviour
         -SimulationManager.instance.WorldSize + bound.size.magnitude,
         SimulationManager.instance.WorldSize - bound.size.magnitude
      );
-
-
     public Vector3 RandomWorldPosition => new Vector3(RandomWorlPoint, RandomWorlPoint, RandomWorlPoint);
-
     private void Awake()
     {
         sphereCollider = gameObject.GetComponent<SphereCollider>();
@@ -35,14 +32,11 @@ public class ObjectController : MonoBehaviour
         transform.position = RandomWorldPosition;
         direction = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
     }
-
     private void FixedUpdate()
     {
         OutsideBoundary(transform.position);
-        transform.position += direction * speed * Time.deltaTime;
+        transform.position += direction * speed * Time.fixedDeltaTime;
     }
-
-
     //restrict object's movement to only world's bounding Box
     private void OutsideBoundary(Vector3 targetPosition)
     {
@@ -54,12 +48,10 @@ public class ObjectController : MonoBehaviour
         if (targetPosition.y + -radius < -boundarySimulationVector.y) direction.y *= -1;
         if (targetPosition.z + -radius < -boundarySimulationVector.z) direction.z *= -1;
     }
-
     private void SetDirection(Vector3 target)
     {
         direction = target;
     }
-
     //Inverting object direction of motion on collision
     public void OnCollide(Bounds collisionBounds) {
 

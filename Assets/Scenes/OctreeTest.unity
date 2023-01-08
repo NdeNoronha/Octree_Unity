@@ -345,12 +345,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb04daaebe9c67643aa5a2cfc7539077, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  simulationMode: 0
+  simulationMode: 1
   objectPrefab: {fileID: 929298202805190505, guid: 91416c84f3cf2174981140da45138c65, type: 3}
-  spawnObjCount: 200
-  nodeMinSize: 3
-  worldSize: 30
+  spawnObjCount: 100
+  nodeMinSize: 20
+  worldSize: 50
   octree:
     rootNode:
       octreeNodeChild: []
       objectControllers: []
+  timeSteps: []
