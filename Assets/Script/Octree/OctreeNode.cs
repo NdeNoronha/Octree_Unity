@@ -37,8 +37,7 @@ public class OctreeNode
             if (octreeNodeChild[i].nodeBounds.Intersects(go.bound))
             {
                 dividingOctreeNode = true;
-                //sending ObjectController "go" to child when it is inside childBounds[i]
-                    
+                //sending ObjectController "go" to child when it is inside childBounds[i] 
                 octreeNodeChild[i].Subdivide(go);
             }
         }
@@ -76,6 +75,7 @@ public class OctreeNode
     public void DrawBoundingBox()
     {
         Gizmos.color = new Color(0, 1, 0);
+        Gizmos.DrawWireCube(nodeBounds.center, nodeBounds.size);
         if(octreeNodeChild != null)
         {
             foreach (OctreeNode node in octreeNodeChild)

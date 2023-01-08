@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using UnityEngine;
 
 public enum SimulationMode
@@ -16,7 +18,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private int spawnObjCount;
     [Range(1,20)] [SerializeField] int nodeMinSize = 20;
     [SerializeField] private float worldSize = 10;
-    public Bounds worldBounds;
+    private Bounds worldBounds;
     private  List<ObjectController> worldObjects = new List<ObjectController>();
     
     public Octree octree;
@@ -25,7 +27,7 @@ public class SimulationManager : MonoBehaviour
 
     public float WorldSize => worldSize;
 
-    void Start()
+    private void Start()
     {
         instance= this;
         worldBounds = new Bounds() { center = transform.position, extents = Vector3.one * worldSize };
@@ -42,29 +44,40 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
 
         worldBounds.extents = Vector3.one*worldSize;
         if(simulationMode == SimulationMode.BRUTE_FORCE)
         {
+            Stopwatch stopwatch = new Stopwatch();
+
+            stopwatch.Start();
             CollisionManager.ProcessCollision(worldObjects, worldObjects);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log(stopwatch.Elapsed.TotalMilliseconds.ToString());
         }
         //octree update each 
         else if (simulationMode == SimulationMode.OCTREE)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             octree = new Octree(worldObjects, nodeMinSize, worldBounds);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log(stopwatch.Elapsed.TotalMilliseconds.ToString());
 
         }
 
     }
 
+
     private void OnDrawGizmos()
     {
         Gizmos.color = new Color(0, 1, 0);
-        Gizmos.DrawWireCube(worldBounds.center,worldBounds.center);
-        //octree.rootNode.DrawBoundingBox();
+        Gizmos.DrawWireCube(worldBounds.center, worldBounds.center);
+        octree.rootNode.DrawBoundingBox();
         
+
     }
 
 
